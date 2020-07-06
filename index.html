@@ -1,0 +1,281 @@
+<html>
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.0.0-beta.12/fabric.min.js"></script>
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+  <!-- jQuery library -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+  <!-- Latest compiled JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <style>
+    #drag-me {
+      display: inline-block;
+      width: 100px;
+      background-color: #DEE1DD;
+      height: 100px;
+    }
+
+
+    #reset {
+      position: absolute;
+      top: 15px;
+      left: 840px;
+    }
+
+    #drag-stuff {
+      position: absolute;
+      top: 67px;
+      left: 840px;
+    }
+    .canvas-container {
+      border: 1px dotted #ccc;
+      display: inline-block;
+      vertical-align: top;
+      -webkit-tap-highlight-color: rgba(0,0,0,0);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="canvas-container" style="width: 800px; height: 500px; position: relative; user-select: none;">
+    <canvas id="canvas" width="800" height="500" style="border:1px solid #000000"></canvas>
+  </div>
+  <div id="reset">
+    <button type="button" class="btn btn-warning" onclick="resetData()">Reset to Default Data</button>
+  </div>
+
+  <div id="drag-stuff" class="log">
+    To "Add" drag me on the canvas<br><br>
+    <!-- <img draggable="true" src="http://i.imgur.com/8rmMZI3.jpg" width="100" height="100"></img> -->
+    <div id="drag-me" draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '')"></div>
+  </div>
+
+  <!--- modal -->
+  <div id="details" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Details</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="form-group">
+              <input type="hidden" id="details-key" name="internal-id">
+              <label for="details-id" class="col-form-label">ID:</label>
+              <input type="text" class="form-control" id="details-id">
+            </div>
+            <div class="form-group">
+              <label for="details-price" class="col-form-label">Price:</label>
+              <input type="text" class="form-control" id="details-price">
+            </div>
+            <div class="form-group">
+              <label for="details-slayer" class="col-form-label">Slayer:</label>
+              <input type="text" class="form-control" id="details-slayer">
+            </div>
+            <div class="form-group">
+              <label for="details-sales" class="col-form-label">Sales:</label>
+              <input type="text" class="form-control" id="details-sales">
+            </div>
+
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-warning" onclick="removeObject()">Delete this Box</button>
+          <button type="button" class="btn btn-primary" onclick="save()">Save</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // functions
+    function generateData (key, objParams) {
+      let objStr = objParams
+      if (!objStr) {
+        objStr = {
+          id: `L${key}`,
+          price: 'nitotan demon',
+          slayer:'rubber',
+          sales: Math.ceil(Math.random() * ( 10000 - 3000) + 3000),
+        };
+      }
+
+      const str = [
+        objStr.id,
+        `Price: \n    ${objStr.price}`,
+        `Slayer: \n    ${objStr.slayer}`,
+        `Sales: \n    ${objStr.sales}`,
+      ].join('\n');
+      return {objStr, str};
+    }
+
+    // SAVE on EDIT
+    function save () {
+      const key = $('#details-key').val();
+      const id = $('#details-id').val();
+      const price = $('#details-price').val();
+      const slayer = $('#details-slayer').val();
+      const sales = $('#details-sales').val();
+
+      const activeObj = canvas.getActiveObject();
+  
+      const {objStr, str} = generateData(key, {id, price, slayer, sales})
+
+      activeObj._objects[1].set('text', str);
+      rectTextConfigs[key].data = objStr;
+
+      canvas.renderAll();
+      $('#details').modal('hide');
+    }
+
+    // function DELETE - when box is to be deleted
+    function  removeObject() {
+      const activeObject = canvas.getActiveObject();
+      canvas.remove(activeObject);
+      $('#details').modal('hide');
+      delete rectTextConfigs[activeObject._xid];
+    }
+
+    function drawCanvas(rectTextConfigs, preserve) {
+      Object.keys(rectTextConfigs).forEach(key => {
+        const obj = rectTextConfigs[key];
+
+        const rect = new fabric.Rect(obj.rect);
+
+        const {objStr, str} = generateData(key, rectTextConfigs[key].data );
+
+        const text =  new fabric.Text(str, obj.text);
+
+        const group = new fabric.Group([ rect,text ], obj.group);
+
+        // to lock controls
+        // group.hasControls = false;
+        // group.lockMovementX = true;
+        // group.lockMovementY = true;
+
+        group._xid = key;
+        if (!rectTextConfigs[key].data) rectTextConfigs[key].data = objStr;
+        canvas.add(group);
+      });
+    }
+
+    // function reset to default data 
+    function resetData() {
+      canvas.remove(...canvas.getObjects());
+      drawCanvas(JSON.parse(window.sessionStorage.getItem('defaultData')));
+      sessionStorage.setItem('currentData', JSON.stringify(defRectTextConfigs));
+      // reset data storage also
+      rectTextConfigs = JSON.parse(JSON.stringify(defRectTextConfigs))
+    }
+
+
+  </script>
+  <script>
+    const canvas = new fabric.Canvas('canvas');
+
+    const fill = '#DEE1DD';
+    const stroke = '#314570';
+    const opacity = '314570';
+    const width = 100;
+    const height = 100;
+    
+    const fontFamily =  'Courier New';
+    const fontSize = 11;
+    
+    // pre loaded data
+    const textConfig = {
+      // fontFamily: 'Courier New',
+      fontSize,
+      originX: 'left',
+      textAlign: 'left',
+      left: 2
+      // width,height,
+    };
+    const defRectTextConfigs = {
+      '0': { group:{width, height, left:10, top:10}, text: textConfig, rect: {width, height, fill, opacity, stroke},
+            data: { id: 'L0', price: 'nitotan demon', slayer:'rubber', sales: 5000},
+           },
+      '1': { group:{width, height, left:10, top:110}, text: textConfig, rect: {width, height, fill, opacity, stroke},
+            data: { id: 'L1', price: 'nitotan demon', slayer:'rubber', sales: 6000}, },
+      '2': { group:{width, height, left:110, top:10}, text: textConfig, rect: {width, height, fill, opacity, stroke},
+            data: { id: 'L2', price: 'nitotan demon', slayer:'rubber', sales: 8000}, },
+      '3':{ group:{width, height, left:110, top:110}, text: textConfig, rect: {width, height, fill, opacity, stroke},
+            data: { id: 'L3', price: 'nitotan demon', slayer:'rubber', sales: 9000}, },
+    }
+
+    // set default data if not set
+    if (!sessionStorage.getItem('defaultData')) sessionStorage.setItem('defaultData', JSON.stringify(defRectTextConfigs));
+
+    // get current Data
+    let currentData = sessionStorage.getItem('currentData');
+    if (!currentData) currentData = sessionStorage.getItem('defaultData');
+
+    let rectTextConfigs = JSON.parse(currentData);
+    drawCanvas(rectTextConfigs);
+    // create rectangles and position - pre loaded data    
+
+    canvas.selectionColor = 'rgba(0,255,0,0.3)';
+    canvas.selectionBorderColor = 'red';
+    canvas.selectionLineWidth = 5;
+
+    // Event Listener: Add ( Drag and drop)
+    canvasContainer = document.getElementById('canvas-container')
+    .addEventListener('drop', (e) => {
+      if (e) {
+        e.preventDefault();
+        const id = Object.keys(rectTextConfigs).length;
+        const {objStr, str} = generateData(id);
+
+        const config = JSON.parse(JSON.stringify(rectTextConfigs[0]))
+        config.hello ='sdfsdfsdfdsfd'
+        const rect = new fabric.Rect(config.rect);
+        const text = new fabric.Text(str, config.text);
+        const group = new fabric.Group([ rect,text ], Object.assign(config.group, {
+          top: e.layerY,
+          left: e.layerX
+        }));
+
+        group._xid = id;
+
+        canvas.add(group);
+        rectTextConfigs[id] = config;
+        rectTextConfigs[id].data = objStr;       
+      }
+    }, false);
+
+    // Event Listner: Click
+    canvas.on('mouse:dblclick', (e) => {
+      if (e.target){
+        const id = e.target._xid;
+
+        const data = rectTextConfigs[id].data;
+
+        $('#details-key').val(id);
+        $('#details-id').val(data.id);
+        $('#details-price').val(data.price);
+        $('#details-slayer').val(data.slayer);
+        $('#details-sales').val(data.sales);
+
+        $('#details').modal('show');
+      }
+    })
+
+  // before closing browser or refresh
+  window.onbeforeunload = () => {
+    sessionStorage.setItem('currentData', JSON.stringify(rectTextConfigs));
+  };
+/*
+Todo: 
+1. grouping
+2. snapping
+3. saving the current layout
+4. 
+*/
+  </script>
+</body>
+</html>
