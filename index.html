@@ -21,13 +21,13 @@
     #reset {
       position: absolute;
       top: 15px;
-      left: 840px;
+      left: 87%;
     }
 
     #drag-stuff {
       position: absolute;
       top: 67px;
-      left: 840px;
+      left: 87%;
     }
     .canvas-container {
       border: 1px dotted #ccc;
@@ -39,8 +39,8 @@
 </head>
 
 <body>
-  <div id="canvas-container" style="width: 800px; height: 500px; position: relative; user-select: none;">
-    <canvas id="canvas" width="800" height="500" style="border:1px solid #000000"></canvas>
+  <div id="canvas-container" style="position: relative; user-select: none;">
+    <canvas id="canvas" style="border:1px solid #000000"></canvas>
   </div>
   <div id="reset">
     <button type="button" class="btn btn-warning" onclick="resetData()">Reset to Default Data</button>
@@ -209,7 +209,7 @@
     }
 
     // set default data if not set
-    if (!sessionStorage.getItem('defaultData')) sessionStorage.setItem('defaultData', JSON.stringify(defRectTextConfigs));
+    if (!window.sessionStorage.getItem('defaultData')) window.sessionStorage.setItem('defaultData', JSON.stringify(defRectTextConfigs));
 
     // get current Data
     let currentData = sessionStorage.getItem('currentData');
@@ -223,6 +223,9 @@
     canvas.selectionBorderColor = 'red';
     canvas.selectionLineWidth = 5;
 
+    canvas.setHeight(window.innerHeight * 0.90);
+    canvas.setWidth(window.innerWidth * 0.85);
+    canvas.renderAll();
     // Event Listener: Add ( Drag and drop)
     canvasContainer = document.getElementById('canvas-container')
     .addEventListener('drop', (e) => {
@@ -235,6 +238,7 @@
         config.hello ='sdfsdfsdfdsfd'
         const rect = new fabric.Rect(config.rect);
         const text = new fabric.Text(str, config.text);
+        console.log( e)
         const group = new fabric.Group([ rect,text ], Object.assign(config.group, {
           top: e.layerY,
           left: e.layerX
@@ -249,22 +253,39 @@
     }, false);
 
     // Event Listner: Click
-    canvas.on('mouse:dblclick', (e) => {
-      if (e.target){
-        const id = e.target._xid;
+  canvas.on('mouse:dblclick', (e) => {
+    if (e.target){
+      const id = e.target._xid;
 
-        const data = rectTextConfigs[id].data;
+      const data = rectTextConfigs[id].data;
 
-        $('#details-key').val(id);
-        $('#details-id').val(data.id);
-        $('#details-price').val(data.price);
-        // $('#details-slayer').val(data.slayer);
-        $('#details-sales').val(data.sales);
+      $('#details-key').val(id);
+      $('#details-id').val(data.id);
+      $('#details-price').val(data.price);
+      // $('#details-slayer').val(data.slayer);
+      $('#details-sales').val(data.sales);
 
-        $('#details').modal('show');
-      }
-    })
+      $('#details').modal('show');
+    }
+  })
 
+  let isObjectMoving = false;
+  canvas.on('object:moving', function (event) {
+    isObjectMoving = true;
+  });
+
+  canvas.on('mouse:up', function (e) {
+  if (isObjectMoving){
+    isObjectMoving = false;
+    if (e.target){
+      const id = e.target._xid;
+
+      const data = rectTextConfigs[id];
+      data.group.left =  e.target.left;
+      data.group.top = e.target.top;
+    }
+  } 
+});
   // before closing browser or refresh
   window.onbeforeunload = () => {
     sessionStorage.setItem('currentData', JSON.stringify(rectTextConfigs));
