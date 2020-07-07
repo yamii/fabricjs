@@ -70,13 +70,13 @@
               <input type="text" class="form-control" id="details-id">
             </div>
             <div class="form-group">
-              <label for="details-price" class="col-form-label">Price:</label>
+              <label for="details-price" class="col-form-label">Prize:</label>
               <input type="text" class="form-control" id="details-price">
             </div>
-            <div class="form-group">
+            <!-- <div class="form-group">
               <label for="details-slayer" class="col-form-label">Slayer:</label>
               <input type="text" class="form-control" id="details-slayer">
-            </div>
+            </div> -->
             <div class="form-group">
               <label for="details-sales" class="col-form-label">Sales:</label>
               <input type="text" class="form-control" id="details-sales">
@@ -100,15 +100,15 @@
         objStr = {
           id: `L${key}`,
           price: 'nitotan demon',
-          slayer:'rubber',
+          // slayer:'rubber',
           sales: Math.ceil(Math.random() * ( 10000 - 3000) + 3000),
         };
       }
 
       const str = [
         objStr.id,
-        `Price: \n    ${objStr.price}`,
-        `Slayer: \n    ${objStr.slayer}`,
+        `Prize: \n    ${objStr.price}`,
+        // `Slayer: \n    ${objStr.slayer}`,
         `Sales: \n    ${objStr.sales}`,
       ].join('\n');
       return {objStr, str};
@@ -119,12 +119,12 @@
       const key = $('#details-key').val();
       const id = $('#details-id').val();
       const price = $('#details-price').val();
-      const slayer = $('#details-slayer').val();
+      // const slayer = $('#details-slayer').val();
       const sales = $('#details-sales').val();
 
       const activeObj = canvas.getActiveObject();
   
-      const {objStr, str} = generateData(key, {id, price, slayer, sales})
+      const {objStr, str} = generateData(key, {id, price, sales})
 
       activeObj._objects[1].set('text', str);
       rectTextConfigs[key].data = objStr;
@@ -258,7 +258,7 @@
         $('#details-key').val(id);
         $('#details-id').val(data.id);
         $('#details-price').val(data.price);
-        $('#details-slayer').val(data.slayer);
+        // $('#details-slayer').val(data.slayer);
         $('#details-sales').val(data.sales);
 
         $('#details').modal('show');
